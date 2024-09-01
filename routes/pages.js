@@ -22,7 +22,7 @@ router.get("/game/:gameId", async (req, res) => {
 
 router.get("/onlinePlayers", async (req, res) => {
   const playersColl = await getCollection(connectToDB, "players");
-  const cursor = playersColl.find({});
+  const cursor = playersColl.find({ online: { $ne: false } });
   const players = await cursor.toArray();
   res.json(players);
 });

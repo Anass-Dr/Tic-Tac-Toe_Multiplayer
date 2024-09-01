@@ -21,9 +21,6 @@ io.on("connection", (socket) => {
   socket.on("gameRequest", (targetPlayerId) =>
     eventHandler.gameRequestEvent(targetPlayerId, socket.id, io)
   );
-  socket.on("refresh", (userId) =>
-    eventHandler.refreshEvent(userId, socket.id)
-  );
   socket.on("gameRequestRefuse", (args) =>
     eventHandler.gameRequestRefuseEvent(args, io)
   );
@@ -34,12 +31,18 @@ io.on("connection", (socket) => {
     eventHandler.newMoveEvent(args, socket.id, io)
   );
   socket.on("boardReset", (args) =>
-    eventHandler.boardResetEvent(args, socket.id, io)
+    eventHandler.boardResetEvent(args, io)
+  );
+  socket.on("boardResetResponse", (args) =>
+    eventHandler.boardResetResponseEvent(args, socket.id, io)
   );
   socket.on("gameEnd", (args) =>
     eventHandler.gameEndEvent(args, socket.id, io)
   );
-  socket.on("disconnect", () => console.log("player disconnect"));
+  socket.on("refresh", (userId) =>
+    eventHandler.refreshEvent(userId, socket.id)
+  );
+  socket.on("disconnect", () => eventHandler.disconnectEvent(socket.id));
 });
 
 server.listen(3000, () => {

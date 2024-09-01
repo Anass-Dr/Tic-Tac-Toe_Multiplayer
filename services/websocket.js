@@ -10,8 +10,13 @@ async function loginEvent(userName, socketId, io) {
     socketId,
     inGame: false,
     currGameId: "",
+    online: true,
   });
+  const cursor = playersColl.find({ online: { $ne: false } });
+  const players = await cursor.toArray();
+
   io.to(socketId).emit("login", document.insertedId.toString());
+  io.emit("onlinePlayers", players);
 }
 
 async function gameRequestEvent(targetPlayerId, socketId, io) {
@@ -84,15 +89,40 @@ async function newMoveEvent({ gameId, playerIndex, moveIndex }, socketId, io) {
   io.to(playerDoc.socketId).emit("newMove", { game, moveIndex });
 }
 
-async function boardResetEvent({ gameId, playerIndex }, socketId, io) {
-  const game = await handleBoardReset(gameId);
+async function boardResetEvent({ gameId, playerIndex }, io) {
+  const gamesColl = await getCollection(connectToDB, "games");
   const playersColl = await getCollection(connectToDB, "players");
+
+  const gameDocument = await gamesColl.findOne({ _id: new ObjectId(gameId) });
+  const playerDoc = await playersColl.findOne({
+    _id: new ObjectId(gameDocument.players[playerIndex ? 0 : 1].id),
+  });
+
+  io.to(playerDoc.socketId).emit("boardResetReq");
+}
+
+async function boardResetResponseEvent(
+  { gameId, playerIndex, answer },
+  socketId,
+  io
+) {
+  const gamesColl = await getCollection(connectToDB, "games");
+  const playersColl = await getCollection(connectToDB, "players");
+
+  const game = answer
+    ? await handleBoardReset(gameId)
+    : await gamesColl.findOne({ _id: new ObjectId(gameId) });
+
   const playerDoc = await playersColl.findOne({
     _id: new ObjectId(game.players[playerIndex ? 0 : 1].id),
   });
 
-  io.to(socketId).emit("boardReset", game);
-  io.to(playerDoc.socketId).emit("boardReset", game);
+  if (answer) {
+    io.to(socketId).emit("boardReset", game);
+    io.to(playerDoc.socketId).emit("boardReset", game);
+  } else {
+    io.to(playerDoc.socketId).emit("boardResetRefused");
+  }
 }
 
 async function gameEndEvent({ gameId, playerIndex }, socketId, io) {
@@ -112,11 +142,20 @@ async function gameEndEvent({ gameId, playerIndex }, socketId, io) {
   io.to(playerDoc.socketId).emit("gameEnd", playerIndex);
 }
 
-function logoutEvent() {}
-
 async function refreshEvent(userId, socketId) {
   const playersColl = await getCollection(connectToDB, "players");
-  playersColl.updateOne({ _id: new ObjectId(userId) }, { $set: { socketId } });
+  const result = await playersColl.updateOne(
+    { _id: new ObjectId(userId) },
+    { $set: { online: true, socketId } }
+  );
+}
+
+async function disconnectEvent(socketId) {
+  const playersColl = await getCollection(connectToDB, "players");
+  const result = await playersColl.updateOne(
+    { socketId },
+    { $set: { online: false } }
+  );
 }
 
 const eventHandler = {
@@ -127,7 +166,8 @@ const eventHandler = {
   gameEndEvent,
   gameStartEvent,
   boardResetEvent,
-  logoutEvent,
+  boardResetResponseEvent,
+  disconnectEvent,
   refreshEvent,
 };
 

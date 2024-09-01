@@ -3,9 +3,6 @@
 // websocket
 const socket = io();
 
-// Refresh Player info
-socket.emit("refresh", localStorage.getItem("userId"));
-
 // Global variables
 const userId = localStorage.getItem("userId");
 const gameId = localStorage.getItem("gameId");
@@ -16,6 +13,9 @@ let gameInfo = {
   results: [0, 0, 0],
   players: [],
 };
+
+// Refresh Player info
+socket.emit("refresh", userId);
 
 // fetch Game infos
 fetchGameInfo();
@@ -117,17 +117,32 @@ socket.on("newMove", ({ game, moveIndex }) => {
   }
 });
 
+// Listen for Game end
+socket.on("gameEnd", (playerIndex) => {
+  if (gameInfo.players.findIndex((item) => item.id === userId) !== playerIndex)
+    alert("the Other player quit the game!");
+  window.location.replace("/");
+});
+
+// Listen for Game Reset request
+socket.on("boardResetReq", () => {
+  const answer = confirm("Other player wants to reset the Game progress!");
+  socket.emit("boardResetResponse", {
+    gameId,
+    playerIndex: gameInfo.players.findIndex((item) => item.id === userId),
+    answer,
+  });
+});
+
+// Listen for Game Reset request refused
+socket.on("boardResetRefused", () =>
+  alert("The other player refused your reset request")
+);
+
 // Listen for Board Reset
 socket.on("boardReset", (game) => {
   gameInfo = game;
   document
     .querySelectorAll(".board__div i")
     .forEach((el) => el.classList.add("hidden"));
-});
-
-// Listen for Game end
-socket.on("gameEnd", (playerIndex) => {
-  if (gameInfo.players.findIndex((item) => item.id === userId) !== playerIndex)
-    alert("the Other player quit the game!");
-  window.location.replace("/");
 });

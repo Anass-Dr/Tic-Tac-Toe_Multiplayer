@@ -1,17 +1,23 @@
-const userName =
+let userName =
   localStorage.getItem("username") ||
   prompt("Please enter your username: ").toLowerCase();
+
+while (userName.length < 3) {
+  userName = prompt("Please enter a valid username: ").toLowerCase();
+}
+
 let onlinePlayers = [];
 if (localStorage.getItem("userId"))
   document.cookie = `userId=${localStorage.getItem("userId")}`;
-fetchOnlinePlayers();
 
 const socket = io();
-// Refresh Player info
-socket.emit("refresh", localStorage.getItem("userId"));
 
 // Update list of online players
-socket.on("onlinePlayers", updateInterface);
+socket.on("onlinePlayers", (players) => {
+  updateInterface(
+    players.filter((player) => player._id !== localStorage.getItem("userId"))
+  );
+});
 
 // Add new player
 if (!localStorage.getItem("username")) {
@@ -21,6 +27,10 @@ if (!localStorage.getItem("username")) {
     localStorage.setItem("userId", userId);
     document.cookie = `userId=${userId}`;
   });
+} else {
+  // Refresh Player info
+  socket.emit("refresh", localStorage.getItem("userId"));
+  fetchOnlinePlayers();
 }
 
 // Send Game request to player
@@ -85,6 +95,7 @@ function createPlayerElement(player) {
 
 function populatePlayerList() {
   const playerList = document.getElementById("player-list");
+  playerList.innerHTML = "";
   onlinePlayers.forEach((player) => {
     playerList.appendChild(createPlayerElement(player));
   });
