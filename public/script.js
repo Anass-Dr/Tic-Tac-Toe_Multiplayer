@@ -55,7 +55,7 @@ board.addEventListener("click", (e) => {
 
 // Functions :
 async function fetchGameInfo() {
-  const res = await fetch(`/gameInfo/${gameId}`);
+  const res = await fetch(`/api/gameInfo/${gameId}`);
   gameInfo = await res.json();
   initialInterface();
 }

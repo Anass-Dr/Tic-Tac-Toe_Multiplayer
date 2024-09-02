@@ -62,7 +62,7 @@ socket.on("gameStart", (gameId) => {
 
 // Fetch online Players
 async function fetchOnlinePlayers() {
-  const res = await fetch("/onlinePlayers");
+  const res = await fetch("/api/onlinePlayers");
   const data = await res.json();
   const userId = localStorage.getItem("userId") || "";
   updateInterface(data.filter((player) => player._id !== userId));

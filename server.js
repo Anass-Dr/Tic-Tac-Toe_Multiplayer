@@ -11,8 +11,10 @@ const io = new Server(server);
 app.use(cookieParser());
 app.use(express.static("public"));
 
-const pageRoutes = require("./routes/pages");
-app.use("/", pageRoutes);
+const webRoutes = require("./routes/web");
+const apiRoutes = require("./routes/api");
+app.use("/", webRoutes);
+app.use("/api", apiRoutes);
 
 io.on("connection", (socket) => {
   socket.on("login", (username) =>
