@@ -41,8 +41,8 @@ io.on("connection", (socket) => {
   socket.on("gameEnd", (args) =>
     eventHandler.gameEndEvent(args, socket.id, io)
   );
-  socket.on("refresh", (userId) =>
-    eventHandler.refreshEvent(userId, socket.id)
+  socket.on("refresh", (args) =>
+    eventHandler.refreshEvent(args, socket.id, io)
   );
   socket.on("disconnect", () => eventHandler.disconnectEvent(socket.id));
 });

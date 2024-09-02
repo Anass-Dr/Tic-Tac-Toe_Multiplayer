@@ -1,6 +1,7 @@
 const { connectToDB } = require("../database");
 const { getCollection } = require("../helpers/queryHelpers");
 const { ObjectId } = require("mongodb");
+
 async function handleNewMove(gameId, moveIndex) {
   const gamesColl = await getCollection(connectToDB, "games");
   const gameDocument = await gamesColl.findOne({ _id: new ObjectId(gameId) });
@@ -14,7 +15,7 @@ async function handleNewMove(gameId, moveIndex) {
   // Check for Win or Draw
   if (checkWin(moveIndex, gameDocument))
     gameDocument.results[gameDocument.role]++;
-  else if (gameDocument.nbOfMovements == 400) gameDocument.results[2]++;
+  else if (gameDocument.nbOfMovements === 400) gameDocument.results[2]++;
 
   // Change the role
   gameDocument.role = gameDocument.role === 0 ? 1 : 0;

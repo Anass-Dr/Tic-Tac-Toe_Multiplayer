@@ -139,11 +139,6 @@ footer {
         margin-top: 0.5rem;
     }
 
-    .player {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
     .start-game-btn {
         margin-top: 0.5rem;
     }
